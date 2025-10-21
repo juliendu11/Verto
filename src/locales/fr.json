@@ -1,0 +1,33 @@
+{
+  "title": "Convertisseur d’images (100% client)",
+  "description": "Vue 3 • Tailwind • Daisy UI • Web Workers • Batch + Progression",
+  "information_text": "Ajoute plusieurs images pour lancer une conversion en parallèle (2 workers par défaut).",
+  "components": {
+    "drop_zone": {
+      "label": "Déposez un fichier à télécharger ou cliquez ici pour parcourir"
+    },
+    "format_selector": {
+      "label": "Format cible"
+    },
+    "quality_selector": {
+      "label": "Qualité: {count}"
+    }
+  },
+  "labels": {
+    "clean": "Vider",
+    "download_all": "Tout télécharger",
+    "download": "Télécharger",
+    "remove": "Retirer"
+  },
+  "queue": {
+    "finished_count": "Terminées: {current}/{total}",
+    "workers_count": "Workers: {count}",
+    "information": {
+      "converted_size": "Converti → {count}"
+    },
+    "statuses": {
+      "in_queue": "En file d’attente…",
+      "error": "Erreur: {message}"
+    }
+  }
+}

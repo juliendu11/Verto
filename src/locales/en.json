@@ -1,0 +1,33 @@
+{
+  "title": "Image Converter (100% client-side)",
+  "description": "View 3 • Tailwind • Daisy UI • Web Workers • Batch + Progress",
+  "information_text": "Add multiple images to start a parallel conversion (2 workers by default).",
+  "components": {
+    "drop_zone": {
+      "label": "Drop a file to upload or click here to browse"
+    },
+    "format_selector": {
+      "label": "Target Format"
+    },
+    "quality_selector": {
+      "label": "Quality: {count}"
+    }
+  },
+  "labels": {
+    "clean": "Empty",
+    "download_all": "Download All",
+    "download": "Download",
+    "remove": "Remove"
+  },
+  "queue": {
+    "finished_count": "Finished: {current}/{total}",
+    "workers_count": "Workers: {count}",
+    "information": {
+      "converted_size": "Converted → {count}"
+    },
+    "statuses": {
+      "in_queue": "In Queue...",
+      "error": "Error: {message}"
+    }
+  }
+}

@@ -1,5 +1,5 @@
 <template>
-  <button class="btn btn-circle" @click="toggleTheme">
+  <button class="btn btn-circle btn-primary btn-outline" @click="toggleTheme">
     <transition name="icon-fade" mode="out-in" appear>
       <svg
         v-if="theme === 'light'"
@@ -31,22 +31,3 @@ import { useTheme } from '@/composables/useTheme'
 
 const { toggleTheme, theme } = useTheme()
 </script>
-
-<style scoped>
-.icon-fade-enter-active,
-.icon-fade-leave-active {
-  transition:
-    opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1),
-    transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-}
-.icon-fade-enter-from,
-.icon-fade-leave-to {
-  opacity: 0;
-  transform: scale(0.7) rotate(-20deg);
-}
-.icon-fade-enter-to,
-.icon-fade-leave-from {
-  opacity: 1;
-  transform: scale(1) rotate(0deg);
-}
-</style>

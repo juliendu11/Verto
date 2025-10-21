@@ -17,14 +17,14 @@
             @change="onFiles"
           />
           <p class="text-center text-sm">
-            <strong>Déposez un fichier à télécharger ou cliquez ici pour parcourir</strong>
+            <strong>{{ t('components.drop_zone.label') }}</strong>
           </p>
         </div>
       </div>
       <div class="space-y-5 flex-1">
         <div class="flex items-center gap-7">
           <fieldset class="fieldset w-30">
-            <legend class="fieldset-legend">Format cible</legend>
+            <legend class="fieldset-legend">{{ t('components.format_selector.label') }}</legend>
             <select v-model="target" class="select">
               <option v-for="option in mimeTypesOptions" :key="option.value" :value="option.value">
                 {{ option.label }}
@@ -33,7 +33,9 @@
           </fieldset>
 
           <fieldset v-if="target === 'image/jpeg' || target === 'image/webp'" class="fieldset w-50">
-            <legend class="fieldset-legend">Qualité: {{ quality }}</legend>
+            <legend class="fieldset-legend">
+              {{ t('components.quality_selector.label', { count: quality }) }}
+            </legend>
             <input
               type="range"
               min="0"
@@ -46,10 +48,10 @@
         </div>
         <div class="flex flex-col md:flex-row md:items-center gap-2">
           <button class="btn btn-primary btn-outline" @click="clearAll" :disabled="!tasks.length">
-            Vider
+            {{ t('labels.clean') }}
           </button>
           <button class="btn btn-primary" @click="downloadAll" :disabled="!doneCount">
-            Tout télécharger
+            {{ t('labels.download_all') }}
           </button>
         </div>
       </div>
@@ -59,62 +61,69 @@
   <section v-if="tasks.length" class="card bg-base-100 shadow-sm p-5">
     <div class="space-y-5">
       <div class="flex items-center gap-3 justify-between">
-        <div class="badge badge-primary">Terminées: {{ doneCount }} / {{ tasks.length }}</div>
-        <div class="badge">Workers: {{ runningCount }}</div>
+        <div class="badge badge-primary">
+          {{ t('queue.finished_count', { current: doneCount, total: tasks.length }) }}
+        </div>
+        <div class="badge">
+          {{ t('queue.workers_count', { count: runningCount }) }}
+        </div>
       </div>
 
       <ul class="list dark:gap-3">
         <li
-          v-for="t in tasks"
-          :key="t.id"
+          v-for="ta in tasks"
+          :key="ta.id"
           class="list-row space-y-5 md:space-y-0 items-center dark:border dark:border-dashed"
         >
           <div
             class="hidden md:flex w-16 h-16 shrink-0 overflow-hidden rounded-md items-center justify-center"
           >
             <img
-              v-if="t.status !== 'error'"
-              :src="t.outputUrl ?? ''"
+              v-if="ta.status !== 'error'"
+              :src="ta.outputUrl ?? ''"
               class="w-full h-full object-cover"
               alt="preview"
             />
             <span v-else class="text-xs text-zinc-400">—</span>
           </div>
           <div>
-            <div>{{ t.name }}</div>
-            <div class="text-xs uppercase font-semibold opacity-60">({{ humanSize(t.size) }})</div>
+            <div>{{ ta.name }}</div>
+            <div class="text-xs uppercase font-semibold opacity-60">({{ humanSize(ta.size) }})</div>
             <div class="h-2 mt-3 mb-5 md:mb-3 md:mt-0 rounded">
               <progress
                 class="progress progress-primary"
-                :class="t.status === 'error' ? 'progress-error' : ''"
-                :value="(t.progress || 0) * 100"
+                :class="ta.status === 'error' ? 'progress-error' : ''"
+                :value="(ta.progress || 0) * 100"
                 max="100"
               ></progress>
             </div>
             <div class="mt-3 md:mt-1 md:text-xs opacity-80">
-              <template v-if="t.status === 'queued'">En file d’attente…</template>
-              <template v-else-if="t.status === 'running'">{{ t.stage }}…</template>
-              <template v-else-if="t.status === 'done'">
-                Converti → {{ humanSize(t.outputSize) }}
+              <template v-if="ta.status === 'queued'">{{ t('queue.statuses.in_queue') }}</template>
+              <template v-else-if="ta.status === 'running'">{{ ta.stage }}…</template>
+              <template v-else-if="ta.status === 'done'">
+                {{ t('queue.information.converted_size', { count: humanSize(ta.outputSize) }) }}
                 <a
                   class="underline ml-2"
-                  :href="t.outputUrl"
+                  :href="ta.outputUrl"
                   :download="
-                    t.name.replace(/\.[^.]+$/, '') +
+                    ta.name.replace(/\.[^.]+$/, '') +
                     '.' +
                     (target === 'image/png' ? 'png' : target === 'image/jpeg' ? 'jpg' : 'webp')
                   "
-                  >Télécharger</a
                 >
+                  {{ t('labels.download') }}
+                </a>
               </template>
-              <template v-else-if="t.status === 'error'">
-                <span class="text-red-600">Erreur : {{ t.error }}</span>
+              <template v-else-if="ta.status === 'error'">
+                <span class="text-red-600">
+                  {{ t('queue.statuses.error', { message: ta.error }) }}
+                </span>
               </template>
             </div>
           </div>
           <div class="shrink-0">
-            <button class="btn btn-primary btn-outline w-full md:w-auto" @click="removeTask(t.id)">
-              Retirer
+            <button class="btn btn-primary btn-outline w-full md:w-auto" @click="removeTask(ta.id)">
+              {{ t('labels.remove') }}
             </button>
           </div>
         </li>
@@ -123,13 +132,14 @@
   </section>
 
   <p v-else class="text-sm opacity-60 text-center mt-10">
-    Ajoute plusieurs images pour lancer une conversion en parallèle (2 workers par défaut).
+    {{ t('information_text') }}
   </p>
 </template>
 
 <script lang="ts" setup>
 import { ref, computed, onBeforeUnmount, useTemplateRef, watch } from 'vue'
 import JSZip from 'jszip'
+import { useI18n } from 'vue-i18n'
 
 type MimeType = 'image/png' | 'image/jpeg' | 'image/webp'
 
@@ -156,6 +166,8 @@ const target = ref<MimeType>('image/webp')
 const quality = ref(0.9)
 const tasks = ref<Task[]>([])
 let nextId = 1
+
+const { t } = useI18n()
 
 watch(quality, () => {
   clearAll()
@@ -262,7 +274,6 @@ function pumpQueue() {
 function onFiles(e: any) {
   const files = Array.from(e.target.files || [])
   if (!files.length) return
-
   ;(files as File[]).forEach((file) => {
     const id = nextId++
     tasks.value.push({
