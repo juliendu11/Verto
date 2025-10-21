@@ -29,5 +29,19 @@
       "in_queue": "En file d’attente…",
       "error": "Erreur: {message}"
     }
+  },
+  "navs": {
+    "about": "À propos"
+  },
+  "dialogs": {
+    "about": {
+      "title": "À propos",
+      "text": "N'hésitez pas à me contacter pour toute suggestion, question, problème ou proposition de projet en utilisant le formulaire de contact sur mon site",
+      "details": {
+        "developer": {
+          "label": "Développeur:"
+        }
+      }
+    }
   }
 }

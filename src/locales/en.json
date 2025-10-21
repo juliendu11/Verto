@@ -29,5 +29,19 @@
       "in_queue": "In Queue...",
       "error": "Error: {message}"
     }
+  },
+  "navs": {
+    "about": "About"
+  },
+  "dialogs": {
+    "about": {
+      "title": "About",
+      "text": "Please feel free to contact me with any suggestions, questions, problems or project proposals using the contact form on my website.",
+      "details": {
+        "developer": {
+          "label": "Developer:"
+        }
+      }
+    }
   }
 }
