@@ -11,6 +11,11 @@
     },
     "quality_selector": {
       "label": "Quality: {count}"
+    },
+    "remove_bg_toggle": {
+      "label": "Remove Background",
+      "detail": "Transparent background",
+      "warning": "Experimental feature, adds extra time for conversion and may not be accurate."
     }
   },
   "labels": {

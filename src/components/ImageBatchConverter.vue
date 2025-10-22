@@ -1,6 +1,6 @@
 <template>
   <section class="card bg-base-100 mb-10 md:mb-5">
-    <div class="flex flex-col md:flex-row gap-5 md:gap-10 h-[280px]">
+    <div class="flex flex-col md:flex-row gap-5 md:gap-10 min-h-[280px]">
       <div class="flex-1">
         <div
           class="border border-dashed h-full rounded-md flex items-center justify-center p-5 cursor-pointer transition duration-150"
@@ -22,7 +22,7 @@
         </div>
       </div>
       <div class="space-y-5 flex-1">
-        <div class="flex items-center gap-7">
+        <div class="flex gap-7">
           <fieldset class="fieldset w-30">
             <legend class="fieldset-legend">{{ t('components.format_selector.label') }}</legend>
             <select v-model="target" class="select">
@@ -30,6 +30,24 @@
                 {{ option.label }}
               </option>
             </select>
+          </fieldset>
+
+          <fieldset v-if="target === 'image/png'" class="fieldset rounded-box p-4">
+            <legend class="fieldset-legend pb-1">
+              {{ t('components.remove_bg_toggle.label') }}
+            </legend>
+            <label class="label">
+              <input v-model="deleteBg" type="checkbox" class="toggle toggle-primary" />
+              <span
+                :class="{
+                  'text-white': deleteBg,
+                }"
+                >{{ t('components.remove_bg_toggle.detail') }}</span
+              >
+            </label>
+            <small class="w-[250px] mt-1">
+              {{ t('components.remove_bg_toggle.warning') }}
+            </small>
           </fieldset>
 
           <fieldset v-if="target === 'image/jpeg' || target === 'image/webp'" class="fieldset w-50">
@@ -140,6 +158,7 @@
 import { ref, computed, onBeforeUnmount, useTemplateRef, watch } from 'vue'
 import JSZip from 'jszip'
 import { useI18n } from 'vue-i18n'
+import { removeBackground } from '@imgly/background-removal'
 
 type MimeType = 'image/png' | 'image/jpeg' | 'image/webp'
 
@@ -164,12 +183,13 @@ const mimeTypesOptions = [
 
 const target = ref<MimeType>('image/webp')
 const quality = ref(0.9)
+const deleteBg = ref(false)
 const tasks = ref<Task[]>([])
 let nextId = 1
 
 const { t } = useI18n()
 
-watch(quality, () => {
+watch([quality, target], () => {
   clearAll()
 })
 
@@ -258,6 +278,7 @@ function pumpQueue() {
               buffer,
               targetMime: target.value,
               quality: quality.value,
+              removeBg: deleteBg.value,
             },
             [buffer],
           )
@@ -381,10 +402,22 @@ onBeforeUnmount(() => {
 async function convertOnMainThread(task: Task) {
   try {
     task.status = 'running'
-    task.stage = 'décodage'
-    task.progress = 0.2
+    let fileToProcess: File | Blob = task.file
 
-    const bitmap = await createImageBitmap(task.file, { imageOrientation: 'from-image' })
+    // If converting to PNG, remove background first
+    if (target.value === 'image/png') {
+      task.stage = 'suppression arrière-plan'
+      task.progress = 0.1
+      const blob = await removeBackground(task.file)
+      // Convert Blob to File
+      fileToProcess = new File([blob], task.file.name, { type: blob.type })
+      task.progress = 0.4
+    }
+
+    task.stage = 'décodage'
+    task.progress = 0.5
+
+    const bitmap = await createImageBitmap(fileToProcess, { imageOrientation: 'from-image' })
     const canvas = document.createElement('canvas')
     canvas.width = bitmap.width
     canvas.height = bitmap.height

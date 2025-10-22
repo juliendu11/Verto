@@ -1,12 +1,14 @@
-// Receives { id, buffer, targetMime, quality }
+// Receives { id, buffer, targetMime, quality, removeBg }
 // Send: { id, type:'progress'|'done'|'error', ... }
+
+import { removeBackground } from '@imgly/background-removal'
 
 function postProgress(id, p, stage) {
   self.postMessage({ id, type: 'progress', progress: p, stage })
 }
 
 self.onmessage = async (e) => {
-  const { id, buffer, targetMime, quality } = e.data
+  const { id, buffer, targetMime, quality, removeBg } = e.data
 
   if (typeof OffscreenCanvas === 'undefined') {
     self.postMessage({ id, type: 'error', message: 'OFFSCREEN_UNSUPPORTED' })
@@ -16,14 +18,32 @@ self.onmessage = async (e) => {
   try {
     postProgress(id, 0.1, 'lecture')
     const blobIn = new Blob([buffer])
-    // createImageBitmap is available as a worker on modern browsers
-    const bitmap = await createImageBitmap(blobIn, { imageOrientation: 'from-image' })
-    postProgress(id, 0.35, 'décodage')
+
+    // If converting to PNG, remove background first
+    let bitmap
+    if (targetMime === 'image/png' && removeBg) {
+      postProgress(id, 0.2, 'suppression arrière-plan')
+      // Create object URL for removeBackground
+      const imageUrl = URL.createObjectURL(blobIn)
+      try {
+        const blob = new Blob([buffer], { type: 'image/png' })
+        const blobWithoutBg = await removeBackground(blob)
+        bitmap = await createImageBitmap(blobWithoutBg, { imageOrientation: 'from-image' })
+      } finally {
+        URL.revokeObjectURL(imageUrl)
+      }
+      postProgress(id, 0.5, 'arrière-plan supprimé')
+    } else {
+      // For non-PNG formats, just decode the image normally
+      bitmap = await createImageBitmap(blobIn, { imageOrientation: 'from-image' })
+    }
+
+    postProgress(id, 0.6, 'décodage')
 
     const canvas = new OffscreenCanvas(bitmap.width, bitmap.height)
     const ctx = canvas.getContext('2d', { alpha: true })
     ctx.drawImage(bitmap, 0, 0)
-    postProgress(id, 0.6, 'rendu')
+    postProgress(id, 0.75, 'rendu')
 
     // convertToBlob is native on OffscreenCanvas (Chrome/FF); fallback on toBlob-like
     let outBlob
@@ -47,6 +67,7 @@ self.onmessage = async (e) => {
       [outBuffer],
     )
   } catch (err) {
+    console.error('Worker conversion error:', err)
     self.postMessage({ id, type: 'error', message: err?.message || String(err) })
   }
 }

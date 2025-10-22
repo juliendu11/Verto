@@ -11,6 +11,11 @@
     },
     "quality_selector": {
       "label": "Qualité: {count}"
+    },
+    "remove_bg_toggle": {
+      "label": "Supprimer l’arrière-plan",
+      "detail": "Fond transparent",
+      "warning": "Fonctionnalité expérimentale, ajoute un temps supplémentaire pour la conversion et peut ne pas être précise."
     }
   },
   "labels": {
