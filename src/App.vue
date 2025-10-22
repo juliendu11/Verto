@@ -18,6 +18,10 @@
               <strong>{{ t('dialogs.about.details.developer.label') }} </strong>
               Julien Da costa
             </p>
+            <p class="mb-5">
+              <strong>{{ t('dialogs.about.details.repository.label') }} </strong>
+              https://github.com/juliendu11/Verto
+            </p>
             <small class="opacity-80">
               {{ t('dialogs.about.text') }}
               <a href="https://julien-dacosta.dev" class="underline">

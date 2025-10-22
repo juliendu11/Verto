@@ -51,6 +51,9 @@
       "details": {
         "developer": {
           "label": "Developer:"
+        },
+        "repository": {
+          "label": "Repository:"
         }
       }
     }

@@ -1,4 +1,4 @@
-#Verto | Online Image Converter
+# Verto | Online Image Converter
 
 Verto is an online image converter to PNG, JPEG, or WebP formats. Its unique feature is that everything is handled client-side via the canvas (OffscreenCanvas) and worker system.
 
