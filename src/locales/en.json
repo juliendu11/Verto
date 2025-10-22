@@ -18,6 +18,12 @@
       "warning": "Experimental feature, adds extra time for conversion and may not be accurate."
     }
   },
+  "message": {
+    "unable_create_2d_context": "Unable to create 2D context",
+    "failed_to_blob": "Failed to create blob from data (toBlob)",
+    "unavailable_to_blob": "Failed to use toBlob",
+    "unknown_error": "Unknown error"
+  },
   "labels": {
     "clean": "Empty",
     "download_all": "Download All",
@@ -47,6 +53,19 @@
           "label": "Developer:"
         }
       }
+    }
+  },
+  "tasks": {
+    "stages": {
+      "waiting": "Waiting",
+      "init": "Initializing",
+      "reading": "Reading",
+      "bg_removal": "Background removal",
+      "bg_removed": "Background removed",
+      "decoding": "Decoding",
+      "rendered": "Rendered",
+      "encoding": "Encoding",
+      "finished": "Finished"
     }
   }
 }

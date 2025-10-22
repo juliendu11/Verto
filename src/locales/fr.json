@@ -18,6 +18,12 @@
       "warning": "Fonctionnalité expérimentale, ajoute un temps supplémentaire pour la conversion et peut ne pas être précise."
     }
   },
+  "message": {
+    "unable_create_2d_context": "Impossible de créer le contexte 2D",
+    "failed_to_blob": "Échec de la création du blob à partir des données (toBlob)",
+    "unavailable_to_blob": "Échec de l'utilisation de toBlob",
+    "unknown_error": "Erreur inconnue"
+  },
   "labels": {
     "clean": "Vider",
     "download_all": "Tout télécharger",
@@ -47,6 +53,19 @@
           "label": "Développeur:"
         }
       }
+    }
+  },
+  "tasks": {
+    "stages": {
+      "waiting": "En attente",
+      "init": "Initialisation",
+      "reading": "Lecture",
+      "bg_removal": "Suppression de l'arrière-plan",
+      "bg_removed": "Arrière-plan supprimé",
+      "decoding": "Décodage",
+      "rendered": "Rendu",
+      "encoding": "Encodage",
+      "finished": "Terminé"
     }
   }
 }

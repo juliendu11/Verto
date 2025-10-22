@@ -187,7 +187,7 @@ const deleteBg = ref(false)
 const tasks = ref<Task[]>([])
 let nextId = 1
 
-const { t } = useI18n()
+const { t, te } = useI18n()
 
 watch([quality, target], () => {
   clearAll()
@@ -209,31 +209,34 @@ function createWorker() {
   const w = new Worker(new URL('../workers/converter.worker.js', import.meta.url), {
     type: 'module',
   })
+
   w.onmessage = (e) => {
     const msg = e.data
-    const t = tasks.value.find((x) => x.id === msg.id)
-    if (!t) return
+    const ta = tasks.value.find((x) => x.id === msg.id)
+    if (!ta) return
 
     if (msg.type === 'progress') {
-      t.progress = Math.max(t.progress, msg.progress)
-      t.stage = msg.stage
+      ta.progress = Math.max(ta.progress, msg.progress)
+      ta.stage = te('tasks.stages.' + msg.stage) ? t('tasks.stages.' + msg.stage) : msg.stage
     } else if (msg.type === 'done') {
       const outBlob = new Blob([msg.buffer], { type: msg.mime })
-      t.outputUrl = URL.createObjectURL(outBlob)
-      t.outputSize = outBlob.size
-      t.progress = 1
-      t.stage = 'terminé'
-      t.status = 'done'
+      ta.outputUrl = URL.createObjectURL(outBlob)
+      ta.outputSize = outBlob.size
+      ta.progress = 1
+      ta.stage = t('tasks.stages.finished')
+      ta.status = 'done'
       releaseWorker(w)
     } else if (msg.type === 'error') {
       if (msg.message === 'OFFSCREEN_UNSUPPORTED') {
         // Fallback: conversion on the main thread (rare / Safari < 17)
-        convertOnMainThread(t)
+        convertOnMainThread(ta)
         releaseWorker(w)
         return
       }
-      t.status = 'error'
-      t.error = msg.message || 'Erreur inconnue'
+      ta.status = 'error'
+      ta.error = te('message.' + msg.message)
+        ? t('message.' + msg.message)
+        : t('message.unknown_error')
       releaseWorker(w)
     }
   }
@@ -265,7 +268,7 @@ function pumpQueue() {
     const worker = w
     busy.set(worker, task.id)
     task.status = 'running'
-    task.stage = 'initialisation'
+    task.stage = t('tasks.stages.init')
     task.progress = 0.05
     task.file
       .arrayBuffer()
@@ -304,7 +307,7 @@ function onFiles(e: any) {
       size: file.size,
       status: 'queued',
       progress: 0,
-      stage: 'en attente',
+      stage: t('tasks.stages.waiting'),
       outputUrl: '',
       outputSize: 0,
       error: '',
@@ -406,7 +409,7 @@ async function convertOnMainThread(task: Task) {
 
     // If converting to PNG, remove background first
     if (target.value === 'image/png') {
-      task.stage = 'suppression arrière-plan'
+      task.stage = t('tasks.stages.remove_bg')
       task.progress = 0.1
       const blob = await removeBackground(task.file)
       // Convert Blob to File
@@ -414,7 +417,7 @@ async function convertOnMainThread(task: Task) {
       task.progress = 0.4
     }
 
-    task.stage = 'décodage'
+    task.stage = t('tasks.stages.decoding')
     task.progress = 0.5
 
     const bitmap = await createImageBitmap(fileToProcess, { imageOrientation: 'from-image' })
@@ -423,15 +426,15 @@ async function convertOnMainThread(task: Task) {
     canvas.height = bitmap.height
 
     const ctx = canvas.getContext('2d', { alpha: true })
-    if (!ctx) throw new Error('Impossible de créer le contexte 2D')
+    if (!ctx) throw new Error(t('message.unable_create_2d_context'))
     ctx.drawImage(bitmap, 0, 0)
 
-    task.stage = 'encodage'
+    task.stage = t('tasks.stages.encoding')
     task.progress = 0.7
 
     const blob: Blob = await new Promise((resolve, reject) => {
       canvas.toBlob(
-        (b) => (b ? resolve(b) : reject(new Error('toBlob a échoué'))),
+        (b) => (b ? resolve(b) : reject(new Error(t('message.failed_to_blob')))),
         target.value,
         quality.value,
       )
@@ -441,7 +444,7 @@ async function convertOnMainThread(task: Task) {
     task.outputUrl = url
     task.outputSize = blob.size
     task.progress = 1
-    task.stage = 'terminé'
+    task.stage = t('tasks.stages.finished')
     task.status = 'done'
   } catch (err: unknown) {
     task.status = 'error'

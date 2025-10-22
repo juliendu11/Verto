@@ -16,13 +16,14 @@ self.onmessage = async (e) => {
   }
 
   try {
-    postProgress(id, 0.1, 'lecture')
+    postProgress(id, 0.1, 'reading')
+
     const blobIn = new Blob([buffer])
 
     // If converting to PNG, remove background first
     let bitmap
     if (targetMime === 'image/png' && removeBg) {
-      postProgress(id, 0.2, 'suppression arrière-plan')
+      postProgress(id, 0.2, 'bg_removal')
       // Create object URL for removeBackground
       const imageUrl = URL.createObjectURL(blobIn)
       try {
@@ -32,18 +33,18 @@ self.onmessage = async (e) => {
       } finally {
         URL.revokeObjectURL(imageUrl)
       }
-      postProgress(id, 0.5, 'arrière-plan supprimé')
+      postProgress(id, 0.5, 'bg_removed')
     } else {
       // For non-PNG formats, just decode the image normally
       bitmap = await createImageBitmap(blobIn, { imageOrientation: 'from-image' })
     }
 
-    postProgress(id, 0.6, 'décodage')
+    postProgress(id, 0.6, 'decoding')
 
     const canvas = new OffscreenCanvas(bitmap.width, bitmap.height)
     const ctx = canvas.getContext('2d', { alpha: true })
     ctx.drawImage(bitmap, 0, 0)
-    postProgress(id, 0.75, 'rendu')
+    postProgress(id, 0.75, 'rendered')
 
     // convertToBlob is native on OffscreenCanvas (Chrome/FF); fallback on toBlob-like
     let outBlob
@@ -51,15 +52,15 @@ self.onmessage = async (e) => {
       outBlob = await canvas.convertToBlob({ type: targetMime, quality })
     } else {
       outBlob = await new Promise((resolve, reject) => {
-        if (!canvas.toBlob) return reject(new Error('toBlob non disponible'))
+        if (!canvas.toBlob) return reject(new Error('message.unavailable_to_blob'))
         canvas.toBlob(
-          (b) => (b ? resolve(b) : reject(new Error('toBlob a échoué'))),
+          (b) => (b ? resolve(b) : reject(new Error('message.failed_to_blob'))),
           targetMime,
           quality,
         )
       })
     }
-    postProgress(id, 0.9, 'encodage')
+    postProgress(id, 0.9, 'encoding')
 
     const outBuffer = await outBlob.arrayBuffer()
     self.postMessage(
