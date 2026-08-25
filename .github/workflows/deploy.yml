@@ -1,0 +1,54 @@
+name: Build Docker images
+
+on:
+  push:
+    branches: [ "master" ]
+
+jobs:
+  build-and-push-dockerfile-image:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push Docker image
+        id: build
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: ghcr.io/juliendu11/verto:latest
+
+      - name: Wait for image to be pullable on registry
+        run: |
+          IMAGE="ghcr.io/juliendu11/verto@${{ steps.build.outputs.digest }}"
+          echo "Waiting for $IMAGE to be available..."
+          for i in $(seq 1 12); do
+            if docker buildx imagetools inspect "$IMAGE" > /dev/null 2>&1; then
+              echo "Image confirmed available on registry."
+              exit 0
+            fi
+            echo "Attempt $i/12: not yet available, retrying in 10s..."
+            sleep 10
+          done
+          echo "Image did not become available in time, deploying anyway..."
+
+      - name: Notify Dokploy to redeploy
+        run: |
+          curl -f -X POST "https://dokploy.julien-dacosta.dev/api/application.redeploy" \
+            -H "x-api-key: ${{ secrets.DOKPLOY_TOKEN }}" \
+            -H "Content-Type: application/json" \
+            -d '{
+                "applicationId": "19zTjEKUj0cXyi6zY1L7W"
+            }'
